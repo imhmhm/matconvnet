@@ -180,9 +180,13 @@ opts.debug            = false;
 opts.cudaMethod       = [] ;
 opts.cudaRoot         = [] ;
 opts.cudaArch         = [] ;
+% opts.defCudaArch      = [...
+%   '-gencode=arch=compute_20,code=\"sm_20,compute_20\" '...
+%   '-gencode=arch=compute_30,code=\"sm_30,compute_30\"'];
 opts.defCudaArch      = [...
-  '-gencode=arch=compute_20,code=\"sm_20,compute_20\" '...
-  '-gencode=arch=compute_30,code=\"sm_30,compute_30\"'];
+  '-gencode=arch=compute_60,code=\"sm_60,compute_60\" '...
+  '-gencode=arch=compute_61,code=\"sm_61,compute_61\" '...
+  '-gencode=arch=compute_62,code=\"sm_62,compute_62\"'];
 opts.mexConfig        = '' ;
 opts.mexCudaConfig    = '' ;
 opts.cudnnRoot        = 'local/cudnn' ;
@@ -341,22 +345,42 @@ else
   flags.base{end+1} = '-DNDEBUG' ;
 end
 
+flags.base_nvcc = {} ;
+if opts.enableGpu, flags.base_nvcc{end+1} = '-DENABLE_GPU' ; end
+if opts.enableDouble, flags.base_nvcc{end+1} = '-DENABLE_DOUBLE' ; end
+if opts.enableCudnn
+  flags.base_nvcc{end+1} = '-DENABLE_CUDNN' ;
+  flags.base_nvcc{end+1} = ['-I"' opts.cudnnIncludeDir '"'] ;
+end
+if opts.verbose > 1, flags.base_nvcc{end+1} = '-v' ; end
+if opts.debug
+  flags.base_nvcc{end+1} = '-g' ;
+  flags.base_nvcc{end+1} = '-DDEBUG' ;
+else
+  flags.base_nvcc{end+1} = '-O 0' ;
+  flags.base_nvcc{end+1} = '-DNDEBUG' ;
+end
+
+
 % MEX: Additional flags passed to `mex` for compiling C++
 % code. CXX and CXXOPTIOM are passed directly to the encapsualted compiler.
-flags.mex = {'-largeArrayDims'} ;
+% flags.mex = {'-largeArrayDims'} ;
+flags.mex = {'-R2018a'} ;
 flags.cxx = {} ;
 flags.cxxoptim = {} ;
 if ~isempty(opts.mexConfig), flags.mex = horzcat(flags.mex, {'-f', opts.mexConfig}) ; end
 
 % MEX: Additional flags passed to `mex` for compiling CUDA
 % code. CXX and CXXOPTIOM are passed directly to the encapsualted compiler.
-flags.mexcuda = {'-largeArrayDims'} ;
+% flags.mexcuda = {'-largeArrayDims'} ;
+flags.mexcuda = {'-R2018a'} ;
 flags.mexcuda_cxx = {} ;
 flags.mexcuda_cxxoptim = {} ;
 if ~isempty(opts.mexCudaConfig), flags.mexcuda = horzcat(flags.mexcuda, {'-f', opts.mexCudaConfig}) ; end
 
 % MEX_LINK: Additional flags passed to `mex` for linking.
-flags.mexlink = {'-largeArrayDims','-lmwblas'} ;
+% flags.mexlink = {'-largeArrayDims','-lmwblas'} ;
+flags.mexlink = {'-lmwblas', '-R2018a'} ;
 flags.mexlink_ldflags = {} ;
 flags.mexlink_ldoptimflags = {} ;
 flags.mexlink_linklibs = {} ;
@@ -609,7 +633,7 @@ if check_deps(opts, tgt, src), return ; end
 nvcc_path = fullfile(opts.cudaRoot, 'bin', 'nvcc');
 nvcc_cmd = sprintf('"%s" -c -o "%s" "%s" %s ', ...
                    nvcc_path, tgt, src, ...
-                   strjoin(horzcat(flags.base,flags.nvcc)));
+                   strjoin(horzcat(flags.base_nvcc,flags.nvcc)));
 opts.verbose && fprintf('%s: NVCC CC: %s\n', mfilename, nvcc_cmd) ;
 status = system(nvcc_cmd);
 if status, error('Command %s failed.', nvcc_cmd); end;
@@ -684,7 +708,7 @@ opts.verbose && fprintf(['%s:\tCUDA: searching for the CUDA Devkit' ...
 % Propose a number of candidate paths for NVCC
 paths = {getenv('MW_NVCC_PATH')} ;
 paths = [paths, which_nvcc()] ;
-for v = {'5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10.0'}
+for v = {'5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10.0', '10.1'}
   switch computer('arch')
     case 'glnxa64'
       paths{end+1} = sprintf('/usr/local/cuda-%s/bin/nvcc', char(v)) ;
