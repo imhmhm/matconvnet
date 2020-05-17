@@ -6,7 +6,7 @@ efficient, and can run and learn state-of-the-art CNNs. Several
 example CNNs are included to classify and encode images. Please visit
 the [homepage](http://www.vlfeat.org/matconvnet) to know more.
 
-**Modified**: *vl_compilenn.m*
+**Modified**: *matlab/vl_compilenn.m*
 
 **Added**: *compile_gpu.m*
 
