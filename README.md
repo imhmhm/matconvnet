@@ -10,7 +10,7 @@ the [homepage](http://www.vlfeat.org/matconvnet) to know more.
 
 **Added**: *compile_gpu.m*
 
-**Complied at Ubuntu 18.04
-Matlab 2019b
-CUDA 10.1
-gcc 8 / g++ 8**
+ - Complied at Ubuntu 18.04
+ - Matlab 2019b
+ - CUDA 10.1
+ - gcc 8 / g++ 8
