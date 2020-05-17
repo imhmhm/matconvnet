@@ -7,6 +7,7 @@ example CNNs are included to classify and encode images. Please visit
 the [homepage](http://www.vlfeat.org/matconvnet) to know more.
 
 Modified vl_compilenn.m
+
 Added compile_gpu.m
 
 Complied at Ubuntu 18.04 
